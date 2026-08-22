@@ -25,6 +25,7 @@ class Category(StrEnum):
     SERVICE = "Service"
     SYSTEM = "System"
 
+
 class Finding(BaseModel):
     """
     A single finding from the audit

@@ -6,7 +6,7 @@ from typing import Annotated
 from rich.panel import Panel
 from rich.table import Table
 
-from cli.ansible.runner import AnsibleRunner
+from cli.ansible.runner import AnsibleWrapper
 from cli.core.context import Context
 from cli.core.models.audit.AnsibleResult import AnsibleResult
 from cli.core.models.audit.AuditResult import AuditResult
@@ -129,7 +129,7 @@ def run_audit(
     """
 
     if not ctx.audit_playbook.is_file():
-        ctx.console.print(f"[red]Audit playbook not found:[/red] {ctx.audit_playbook}")
+        ctx.console.print(f"[red]Playbook not found:[/red] {ctx.audit_playbook}")
         return 2
 
     inventory_value: str = str(inventory)
@@ -155,7 +155,7 @@ def run_audit(
         )
     )
 
-    runner: AnsibleRunner = AnsibleRunner(ctx.root)
+    runner: AnsibleWrapper = AnsibleWrapper(ctx)
 
     ctx.console.print("[bold]Running audit...[/bold]\n")
 

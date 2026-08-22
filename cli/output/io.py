@@ -1,6 +1,4 @@
 from __future__ import annotations
-import typer
-from pathlib import Path
 from datetime import datetime, timezone
 from rich.table import Table
 

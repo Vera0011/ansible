@@ -1,0 +1,7 @@
+---
+- name: Checks connectivity and setup
+  hosts: vagrant-audit-1
+  tasks:
+    - name: Debug
+      ansible.builtin.debug:
+        msg: "Debug"

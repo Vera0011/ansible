@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys, os
 from dataclasses import dataclass
 from pathlib import Path
 from rich.console import Console
@@ -32,23 +33,40 @@ class Context:
     roles_dir: Path
     inventory_dir: Path
     reports_dir: Path
+    ansible_conf: Path
     console: Console
 
     @classmethod
     def discover(cls) -> Context:
+        """
+        Discovers the main repository path
+
+        Returns
+        -------
+        Context
+            The context with the correct main path
+        """
         current = Path.cwd().resolve()
 
         for candidate in (current, *current.parents):
             if cls._is_repository(candidate):
                 return cls.from_root(candidate)
 
+        if getattr(sys, "frozen", False):
+            bundled_root = Path(getattr(sys, "_MEIPASS", ""))
+            if cls._is_repository(bundled_root):
+                return cls.from_root(
+                    bundled_root,
+                    reports_dir=Path.cwd() / "reports",
+                )
+
         raise RepositoryError(
-            "Could not found the root repository.\n"
+            "Could not find the root repository.\n"
             "Run this command from the root repository."
         )
 
     @classmethod
-    def from_root(cls, root: Path) -> Context:
+    def from_root(cls, root: Path, *, reports_dir: Path | None = None) -> Context:
         """
         Creates the context based on a provided path
 
@@ -56,10 +74,13 @@ class Context:
         ----------
         root: Path
             Main path provided
+        reports_dir: Path | None
+            Override for where reports are written (e.g. when root is a
+            read-only bundled/temp directory and reports must go elsewhere)
 
         Returns
         -------
-        EasySecContext
+        Context
             The generated context
         """
 
@@ -71,25 +92,56 @@ class Context:
                 "Run this command from the root repository."
             )
 
+        cls.configure_ansible_environment()
+
         return cls(
             root=root,
             console=Console(),
             playbooks_dir=root / "playbooks",
-            roles_dir=root / "roles",
+            roles_dir=(
+                root / "playbooks" / "roles"
+                if getattr(sys, "frozen", False)
+                else root / "roles"
+            ),
             inventory_dir=root / "inventory",
-            reports_dir=root / "reports",
+            ansible_conf=root / "ansible.cfg",
+            reports_dir=reports_dir or (root / "reports"),
         )
 
     @classmethod
     def _is_repository(cls, root: Path) -> bool:
-        return all(
-            (
-                (root / "playbooks").is_dir(),
-                (root / "roles").is_dir(),
-                (root / "inventory").is_dir(),
-                (root / "ansible.cfg").is_file(),
+        """
+        Checks if the selected path is the main path or not
+
+        Parameters
+        ----------
+        root: Path
+            The path to check
+
+        Returns
+        -------
+        bool
+            If the specified path is the main path or not
+        """
+
+        if getattr(sys, "frozen", False):
+            return all(
+                (
+                    (root / "playbooks").is_dir(),
+                    (root / "playbooks" / "roles").is_dir(),
+                    (root / "inventory").is_dir(),
+                    (root / "ansible.cfg").is_file(),
+                )
             )
-        )
+        else:
+            return all(
+                (
+                    (root / "playbooks").is_dir(),
+                    (root / "roles").is_dir(),
+                    (root / "inventory").is_dir(),
+                    (root / "ansible.cfg").is_file(),
+                )
+            )
 
     @property
     def audit_playbook(self) -> Path:
@@ -103,3 +155,20 @@ class Context:
         """
 
         return self.playbooks_dir / "audit.yml"
+
+    @classmethod
+    def configure_ansible_environment(cls) -> None:
+        """
+        Configures correctly the binaries (ansible-playbook) - Makes them discoverable
+        """
+
+        if not getattr(sys, "frozen", False):
+            return
+
+        root = Path(sys._MEIPASS)
+        ansible_bin = root / "ansible" / "bin"
+
+        if not ansible_bin.is_dir():
+            raise RuntimeError(f"Bundled Ansible binaries not found: {ansible_bin}")
+
+        os.environ["PATH"] = str(ansible_bin) + os.pathsep + os.environ.get("PATH", "")

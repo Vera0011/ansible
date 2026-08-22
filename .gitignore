@@ -10,3 +10,5 @@ generated/*
 reports/
 __pycache__
 uv.lock
+dist
+build

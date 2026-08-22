@@ -1,24 +1,24 @@
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
-
+from cli.core.context import Context
+from ansible.cli.playbook import PlaybookCLI
 from cli.core.models.audit.AnsibleResult import AnsibleResult
 
 
-class AnsibleRunner:
+class AnsibleWrapper:
     """
     Wrapper around ansible-playbook binary
     """
 
-    def __init__(self, repository_root: Path):
-        self.repository_root = repository_root
+    def __init__(self, context: Context):
+        self.context = context
 
     def run(
         self,
-        playbook: Path,
+        playbook: str,
         *,
-        inventory: Path,
+        inventory: str,
         ssh_key: str,
         ssh_user: str,
         check: bool,
@@ -53,6 +53,8 @@ class AnsibleRunner:
             "-i",
             str(inventory),
             str(playbook),
+            "-e",
+            "ansible_python_interpreter=auto_silent",
         ]
 
         if check:
@@ -61,22 +63,28 @@ class AnsibleRunner:
         if diff:
             command.append("--diff")
 
-        if len(ssh_key) != 0:
-            command.extend(["--private-key", str(ssh_key)])
+        if ssh_key:
+            command.extend(
+                [
+                    "--private-key",
+                    str(Path(ssh_key).resolve()),
+                ]
+            )
 
-        if len(ssh_user) != 0:
-            command.extend(["--user", str(ssh_user)])
+        if ssh_user:
+            command.extend(
+                [
+                    "--user",
+                    ssh_user,
+                ]
+            )
 
-        completed = subprocess.run(
-            command,
-            cwd=self.repository_root,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        cli = PlaybookCLI(command)
+        cli.parse()
+        completed = cli.run()
 
         return AnsibleResult(
-            returncode=completed.returncode,
-            stdout=completed.stdout,
-            stderr=completed.stderr,
+            returncode=completed or 0,
+            stdout="",
+            stderr="",
         )

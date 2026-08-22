@@ -1,6 +1,5 @@
 ---
 - name: We extract logs from remote to local
-  become: true
   loop:
     - { path: "{{ audit_remote_lynis_output_path }}", name: "lynis.dat" }
     - { path: "{{ audit_remote_syft_output_path }}", name: "syft.json" }

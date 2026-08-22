@@ -1,43 +1,44 @@
 ---
 - name: Execution of binaries
+  become: true
   block:
     - name: Lynis execution
       args:
         chdir: "{{ audit_remote_main_folder }}"
-      become: true
       changed_when: false
       ansible.builtin.shell: >
-        cd bin && chown -R 0:0 lynis && cd lynis && sudo {{ audit_lynis_command }}
+        cd bin && chown -R 0:0 lynis && cd lynis && sudo {{ audit_lynis_command }} && \
+        chmod 666 {{ audit_remote_lynis_output_path }}
 
     - name: Syft execution
       args:
         chdir: "{{ audit_remote_main_folder }}"
         executable: /bin/bash
-      become: true
       changed_when: false
       ansible.builtin.shell: >
         set -uo pipefail &&
-        {{ audit_remote_syft_binary_path }} / -c {{ audit_remote_syft_config_path }} > {{ audit_remote_syft_output_path }}
+        {{ audit_remote_syft_binary_path }} / -c {{ audit_remote_syft_config_path }} > {{ audit_remote_syft_output_path }} && \
+        chmod 666 {{ audit_remote_syft_output_path }}
 
     - name: Grype execution
       args:
         chdir: "{{ audit_remote_main_folder }}"
         executable: /bin/bash
-      become: true
       changed_when: false
       ansible.builtin.shell: >
         set -uo pipefail &&
         cat {{ audit_remote_syft_output_path }} | \
-         {{ audit_remote_grype_binary_path }} -c {{ audit_remote_grype_config_path }} > {{ audit_remote_grype_output_path }}
+         {{ audit_remote_grype_binary_path }} -c {{ audit_remote_grype_config_path }} > {{ audit_remote_grype_output_path }} && \
+        chmod 666 {{ audit_remote_grype_output_path }}
 
     - name: Grant execution
       args:
         chdir: "{{ audit_remote_main_folder }}"
         executable: /bin/bash
-      become: true
       changed_when: false
       ansible.builtin.shell: >
         set -uo pipefail &&
         cat {{ audit_remote_syft_output_path }} | \
          {{ audit_remote_grant_binary_path }} --dry-run --no-output check -c {{ audit_remote_grant_config_path }} | \
-         sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]8;;[^\x1b]*\x1b\\//g' > {{ audit_remote_grant_output_path }}
+         sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]8;;[^\x1b]*\x1b\\//g' > {{ audit_remote_grant_output_path }} && \
+        chmod 666 {{ audit_remote_grant_output_path }}

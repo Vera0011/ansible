@@ -1,5 +1,6 @@
 ---
 - name: Tarball management
+  become: true
   block:
     - name: Sending to target
       ansible.builtin.copy:
@@ -19,6 +20,7 @@
         state: absent
 
 - name: Applying configuration templates
+  become: true
   block:
     - name: Sends Syft template
       ansible.builtin.template:

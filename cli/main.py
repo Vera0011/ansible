@@ -22,9 +22,12 @@ def main(ctx: typer.Context) -> None:
     This function sets up the context and starts the app
     """
 
-    context: Context = Context.discover()
+    context = Context.discover()
     ctx.obj = context
 
 
 app.command(name="version")(show_version)
 app.command(name="audit")(audit)
+
+if __name__ == "__main__":
+    app()
