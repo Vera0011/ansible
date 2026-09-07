@@ -2,6 +2,7 @@ from __future__ import annotations
 import typer
 
 from cli.bin.audit import audit
+from cli.bin.hardening import hardening
 from cli.bin.version import show_version
 from cli.core.context import Context
 
@@ -28,6 +29,7 @@ def main(ctx: typer.Context) -> None:
 
 app.command(name="version")(show_version)
 app.command(name="audit")(audit)
+app.command(name="harden")(hardening)
 
 if __name__ == "__main__":
     app()

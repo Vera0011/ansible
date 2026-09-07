@@ -33,7 +33,9 @@ class Context:
     roles_dir: Path
     inventory_dir: Path
     reports_dir: Path
-    ansible_conf: Path
+
+    ansible_conf_path: Path
+    inventory_path: Path
     console: Console
 
     @classmethod
@@ -46,15 +48,17 @@ class Context:
         Context
             The context with the correct main path
         """
+
         current = Path.cwd().resolve()
 
         for candidate in (current, *current.parents):
-            if cls._is_repository(candidate):
+            if cls._get_paths(candidate).index(0):
                 return cls.from_root(candidate)
 
         if getattr(sys, "frozen", False):
             bundled_root = Path(getattr(sys, "_MEIPASS", ""))
-            if cls._is_repository(bundled_root):
+
+            if cls._get_paths(bundled_root).index(0):
                 return cls.from_root(
                     bundled_root,
                     reports_dir=Path.cwd() / "reports",
@@ -66,7 +70,7 @@ class Context:
         )
 
     @classmethod
-    def from_root(cls, root: Path, *, reports_dir: Path | None = None) -> Context:
+    def from_root(cls, root: Path, reports_dir: Path | None = None) -> Context:
         """
         Creates the context based on a provided path
 
@@ -84,32 +88,21 @@ class Context:
             The generated context
         """
 
-        root = root.resolve()
-
-        if not cls._is_repository(root):
-            raise RepositoryError(
-                f"{root} is not the root repository.\n"
-                "Run this command from the root repository."
-            )
-
-        cls.configure_ansible_environment()
+        cls._configure_ansible_environment()
 
         return cls(
             root=root,
             console=Console(),
-            playbooks_dir=root / "playbooks",
-            roles_dir=(
-                root / "playbooks" / "roles"
-                if getattr(sys, "frozen", False)
-                else root / "roles"
-            ),
-            inventory_dir=root / "inventory",
-            ansible_conf=root / "ansible.cfg",
-            reports_dir=reports_dir or (root / "reports"),
+            playbooks_dir=cls.playbooks_dir,
+            roles_dir=cls.roles_dir,
+            inventory_dir=cls.inventory_dir,
+            inventory_path=cls.inventory_path,
+            ansible_conf=cls.ansible_conf_path,
+            reports_dir=reports_dir if reports_dir != None else cls.inventory_dir,
         )
 
     @classmethod
-    def _is_repository(cls, root: Path) -> bool:
+    def _get_paths(cls, root: Path) -> tuple[bool, list[str]]:
         """
         Checks if the selected path is the main path or not
 
@@ -124,40 +117,41 @@ class Context:
             If the specified path is the main path or not
         """
 
+        playbooks = root / "playbooks"
+        roles = root / "playbooks" / "roles"
+        inventory = root / "inventory"
+        ansible = root / "ansible.cfg"
+
         if getattr(sys, "frozen", False):
-            return all(
-                (
-                    (root / "playbooks").is_dir(),
-                    (root / "playbooks" / "roles").is_dir(),
-                    (root / "inventory").is_dir(),
-                    (root / "ansible.cfg").is_file(),
-                )
+            return (
+                all(
+                    (
+                        playbooks.is_dir(),
+                        roles.is_dir(),
+                        inventory.is_dir(),
+                        ansible.is_file(),
+                    )
+                ),
+                [playbooks, roles, inventory, ansible],
             )
+
         else:
-            return all(
-                (
-                    (root / "playbooks").is_dir(),
-                    (root / "roles").is_dir(),
-                    (root / "inventory").is_dir(),
-                    (root / "ansible.cfg").is_file(),
-                )
+            roles = root / "roles"
+
+            return (
+                all(
+                    (
+                        playbooks.is_dir(),
+                        roles.is_dir(),
+                        inventory.is_dir(),
+                        ansible.is_file(),
+                    )
+                ),
+                [playbooks, roles, inventory, ansible],
             )
-
-    @property
-    def audit_playbook(self) -> Path:
-        """
-        Returns the audit playbook from this context
-
-        Returns
-        -------
-        Path
-            The built path
-        """
-
-        return self.playbooks_dir / "audit.yml"
 
     @classmethod
-    def configure_ansible_environment(cls) -> None:
+    def _configure_ansible_environment(cls) -> None:
         """
         Configures correctly the binaries (ansible-playbook) - Makes them discoverable
         """
@@ -172,3 +166,46 @@ class Context:
             raise RuntimeError(f"Bundled Ansible binaries not found: {ansible_bin}")
 
         os.environ["PATH"] = str(ansible_bin) + os.pathsep + os.environ.get("PATH", "")
+
+    @classmethod
+    def _load_invenvory(cls) -> None:
+        """ """
+
+    @property
+    def audit_playbook(self) -> Path:
+        """
+        Returns the audit playbook from this context
+
+        Returns
+        -------
+        Path
+            The built path
+        """
+
+        return self.playbooks_dir / "audit.yml"
+
+    @property
+    def check_playbook(self) -> Path:
+        """
+        Returns the audit playbook from this context
+
+        Returns
+        -------
+        Path
+            The built path
+        """
+
+        return self.playbooks_dir / "hardening.yml"
+
+    @property
+    def hardening_playbook(self) -> Path:
+        """
+        Returns the audit playbook from this context
+
+        Returns
+        -------
+        Path
+            The built path
+        """
+
+        return self.playbooks_dir / "hardening.yml"

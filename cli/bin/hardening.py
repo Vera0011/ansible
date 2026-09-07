@@ -14,7 +14,7 @@ from cli.output.io import _render_success, _write_result
 from cli.core.exceptions import EasySecError
 
 
-def audit(
+def hardening(
     ctx: typer.Context,
     ssh_key: Annotated[
         str,
@@ -65,8 +65,9 @@ def audit(
     console = ctx.console
 
     try:
-        exit_code: int = run_audit(
+        exit_code: int = run_hardening(
             ctx,
+            inventory=inventory,
             ssh_key=ssh_key,
             ssh_user=ssh_user,
             check=check,
@@ -81,9 +82,10 @@ def audit(
     raise typer.Exit(code=exit_code)
 
 
-def run_audit(
+def run_hardening(
     ctx: Context,
     *,
+    inventory: Path,
     ssh_key: str,
     ssh_user: str,
     check: bool,
@@ -97,6 +99,8 @@ def run_audit(
     ----------
     ctx: Context
         Context of the application
+    inventory: Path
+        The selected inventory
     ssh_key: str
         If an access key must be used
     ssh_user: str
@@ -119,7 +123,8 @@ def run_audit(
         ctx.console.print(f"[red]Playbook not found:[/red] {ctx.audit_playbook}")
         return 2
 
-    result: AuditResult = AuditResult.create()
+    inventory_value: str = str(inventory)
+    result: AuditResult = AuditResult.create(inventory_value)
 
     ctx.console.print()
     table = Table.grid(padding=(0, 2))
@@ -127,8 +132,7 @@ def run_audit(
     table.add_column(style="spring_green1")
 
     table.add_row("Repository", str(ctx.root))
-    table.add_row("Option", "Audit")
-    table.add_row("Inventory", str(ctx.inventory_path))
+    table.add_row("Inventory", str(inventory_value))
     table.add_row("Check enabled", str(check))
     table.add_row("Diff enabled", str(diff))
     table.add_row("JSON output", str(json))
