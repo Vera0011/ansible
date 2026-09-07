@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Tools
-parent: English
+title: Workflows
+parent: Español
 has_children: true
 search_exclude: true
 ---
 
-# Tools
+# Workflows

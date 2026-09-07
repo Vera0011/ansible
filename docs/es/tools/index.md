@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Tools
-parent: English
+title: Herramientas
+parent: Español
 has_children: true
 search_exclude: true
 ---
 
-# Tools
+# Herramientas

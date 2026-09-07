@@ -1,6 +1,6 @@
 ---
 layout: default
-title: POstgreSQL
+title: PostgreSQL
 parent: Tools
 grand_parent: English
 ---
