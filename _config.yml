@@ -1,0 +1,12 @@
+plugins:
+  - jekyll-readme-index
+
+exclude:
+  - roles
+  - inventories
+  - playbooks
+  - host_vars
+  - scripts
+  - vagrant
+  - logs
+  - ansible.cfg
