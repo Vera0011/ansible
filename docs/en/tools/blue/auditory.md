@@ -1,15 +1,40 @@
-# Role - Auditory
-## Introduction
-This role is an implementation of some auditory tools that generate an auditory report for the executioner. </br>
-This role belong to the `Blue Team` section.
+---
+layout: default
+title: Auditory
+parent: Tools
+grand_parent: English
+---
 
-## Implementation
-The implementation of this tool in Ansible is as follows:
-1. Binaries and configuration files are compressed on the controller.
-2. The compressed file is sent to the host and extracted there.
-3. Binaries are executed on the host.
-4. Generated reports are extracted from the host and stored on the controller.
-5. Generated files and configurations and removed from the host
-### Usage
-1. Run the playbook (instructions can be found [here](../../../../roles/audit/README.md))
-2. Generated reports found [here](../../../../roles/audit/reports/)
+# Auditory
+
+## Introduction
+
+This role executes multiple tools, gather their reports and sends back to the controller. The following tools are executed and the intention:
+
+- [Lynis](./lynis.md): Gather recommended missing hardening features
+- [Syft](./syft.md): Executes Syft to generate an SBOM.
+- [Grype](./grype.md): Executes Grype based on the Syft SBOM.
+- [Grant](./grant.md): Executes Grant based on the Syft SBOM.
+
+This role does not install any tools. All tools and binaries are located in the controller. They are compressed, sent to the host, executed and then removed from the host.
+
+## Usage
+
+```yaml
+- hosts: example-host
+  become: true
+  roles:
+    - audit
+```
+
+## Test suite
+
+The role has been tested in the following hosts:
+
+### Target hosts
+
+- Ubuntu Server 22.04 (Jammy Jellyfish)
+
+### Manager hosts
+
+- Ubuntu Server 22.04 (Jammy Jellyfish)

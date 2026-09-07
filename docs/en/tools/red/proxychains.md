@@ -1,3 +1,11 @@
+---
+layout: default
+title: Proxychains
+parent: Tools
+grand_parent: English
+permalink: /en/tools/proxychains
+---
+
 # Proxychains
 ## Introduction
 Proxychains is a package available in Linux kernel distributions (Ubuntu, Kali Linux, etc.). It is used to route traffic through multiple machines to mask your traffic. </br>
