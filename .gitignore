@@ -7,4 +7,6 @@ logs/*
 vagrant/*
 generated/*
 *.tar.gz
-reports/
+vendor/
+.bundle
+_site/

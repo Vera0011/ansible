@@ -1,0 +1,53 @@
+remote_theme: just-the-docs/just-the-docs
+plugins:
+  - jekyll-readme-index
+  - jekyll-remote-theme
+
+title: EasySec
+description: EasySec documentation
+url: "https://docs.easysec.es"
+
+include:
+  - LICENSE.md
+
+#exclude:
+#  - es/
+
+aux_links:
+  "<img alt='Github logo' src='https://asset.brandfetch.io/idZAyF9rlg/idVXsZfhLv.svg' width='30em' height='30em'></img>":
+    - "//github.com/Vera0011/easysec"
+  "<img alt='Discord logo' src='https://cdn.brandfetch.io/idM8Hlme1a/theme/light/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B' width='30em' height='30em'></img>":
+    - "//discord.gg/vN7XcnC4jM"
+aux_links_new_tab: true
+
+nav_enabled: true
+search_enabled: true
+
+footer_content: "Copyright &copy; 2026-2026 Adrian Vera. Distributed by an <a href=\"https://github.com/Vera0011/easysec/tree/master/LICENSE.md\">MIT license.</a>"
+last_edit_timestamp: true
+last_edit_time_format: "%b %e %Y at %I:%M %p"
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/Vera0011/easysec"
+gh_edit_branch: "master"
+gh_edit_source: docs
+gh_edit_view_mode: "tree"
+
+# Referencing _sass/color_schemes/default.scss
+color_scheme: default
+
+callouts:
+  highlight:
+    color: yellow
+  important:
+    title: Important
+    color: blue
+  new:
+    title: New
+    color: green
+  note:
+    title: Note
+    color: purple
+  warning:
+    title: Warning
+    color: red
