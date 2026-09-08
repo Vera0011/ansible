@@ -1,8 +1,7 @@
 ---
 layout: default
 title: Configuración
-nav_order: 3
-parent: v1.1.0
+nav_order: 2
 ---
 
 # 1. Configuración

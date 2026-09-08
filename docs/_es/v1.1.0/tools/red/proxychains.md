@@ -2,32 +2,61 @@
 layout: default
 title: Proxychains
 parent: Herramientas
-permalink: /es/herramientas/proxychains
+grand_parent: v1.1.0
+permalink: /es/v1.1.0/proxychains
 ---
 
 # Proxychains
 
 ## Introducción
 
-Proxychains es un paquete disponible en distribuciones del kernel de Linux (Ubuntu, Kali Linux...). Se emplea para desviar el tráfico a través de diversas máquinas para disimular tu tráfico. </br>
-Esta herramienta pertenece a la sección de `Red Team`.
+Proxychains es un paquete disponible en distribuciones de Linux (Ubuntu, Kali Linux, etc.). Se utiliza para enrutar el tráfico a través de múltiples máquinas y así enmascarar el tráfico propio. Pertenece a la sección `Red Team`.
 
 ## Implementación
 
-La implementación de esta herramienta en Ansible es la siguiente:
+Cuando se instala mediante el rol de Ansible de este repositorio, Proxychains se configura de la siguiente forma:
 
-1. Se crean múltiples proxies (auto-hosteados, usando unidades de servicio) usando Tor
-2. Se configura proxychains para que pueda usarlos
-3. EL tráfico generado durante el uso será redirigido a los servicios de Tor.
+1. Se crean múltiples proxies autoalojados utilizando Tor, cada uno ejecutándose como su propia unidad de servicio.
+2. Antes de crear nuevos servicios de Tor, se eliminan los servicios de Tor personalizados ya existentes creados por este rol. A continuación, se crea un nuevo servicio utilizando una plantilla de unidad de sistema compartida y una configuración específica para cada instancia.
+3. Proxychains se configura para utilizar estas instancias de Tor, mediante un método round-robin.
+4. Una vez configurado, el tráfico generado a través de Proxychains se redirige a través de estos servicios de Tor.
 
-## Uso
+## Uso del rol en Ansible
 
-1. Ejecución del playbook (las instrucciones pueden ser encontradas [aquí](../../../../roles/proxychains/README.md))
-2. Tras la instalación, se ejecuta el siguiente comando:
-
-```bash
-proxychains -q <servicio>
-proxychains4 -q <servicio>
+```yaml
+- hosts: example-host
+  become: true
+  roles:
+    - proxychains
+  vars:
+    proxychains_clean: false
+    proxychains_total_proxies: 10
 ```
 
-3. El tráfico será redirigido a través del servicio especificado. Hay que tener en cuenta que "servicio" hace referencia a una aplicación (como puede ser `firefox`) o a comandos (`nmap`, `dirsearch`...)
+### Propiedades
+
+- `proxychains_clean` (booleano, opcional): Indica si el rol debe ejecutarse en modo de limpieza, eliminando todos los proxies existentes en lugar de crear otros nuevos.
+- `proxychains_total_proxies` (int, opcional): Número de proxies a configurar.
+
+## Uso desde línea de comandos
+
+Una vez instalado, Proxychains puede ejecutarse directamente en el host:
+
+```bash
+proxychains -q <service>
+proxychains4 -q <service>
+```
+
+El tráfico generado por `<service>` se redirigirá a través de las instancias de Tor configuradas. Ten en cuenta que `<service>` se refiere a una aplicación (como `firefox`) o a un comando (como `nmap` o `dirsearch`).
+
+## Suite de pruebas
+
+Este rol ha sido probado con las siguientes configuraciones de host:
+
+### Hosts de destino
+
+- Kali Linux — Rolling
+
+### Hosts gestores
+
+- Ubuntu Server 22.04 (Jammy Jellyfish)
