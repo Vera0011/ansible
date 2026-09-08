@@ -29,7 +29,7 @@ def main(ctx: typer.Context) -> None:
 
 app.command(name="version")(show_version)
 app.command(name="audit")(audit)
-app.command(name="harden")(hardening)
+#app.command(name="harden")(hardening)
 
 if __name__ == "__main__":
     app()

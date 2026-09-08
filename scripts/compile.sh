@@ -4,7 +4,7 @@
 
 uv run pyinstaller \
     --name easysec-1.2.0 \
-    --onedir \
+    --onefile \
     --console \
     --add-data "playbooks:playbooks" \
     --add-data "roles:playbooks/roles" \

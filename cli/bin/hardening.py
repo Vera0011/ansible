@@ -1,21 +1,25 @@
 from __future__ import annotations
 import typer
 
-from pathlib import Path
 from typing import Annotated
 from rich.panel import Panel
 from rich.table import Table
 
 from cli.ansible.runner import AnsibleWrapper
 from cli.core.context import Context
-from cli.core.models.audit.AnsibleResult import AnsibleResult
-from cli.core.models.audit.AuditResult import AuditResult
-from cli.output.io import _render_success, _write_result
 from cli.core.exceptions import EasySecError
 
 
 def hardening(
     ctx: typer.Context,
+    environment: Annotated[
+        str,
+        typer.Option(
+            "--environment",
+            "-e",
+            help="Determines if the inventory to use. Available options are 'vagrant', 'production' and 'staging'",
+        ),
+    ] = "vagrant",
     ssh_key: Annotated[
         str,
         typer.Option(
@@ -39,7 +43,7 @@ def hardening(
             "-c",
             help="Run Ansible in check mode. This means that the playbook will be executed but will not perform changes",
         ),
-    ] = False,
+    ] = True,
     diff: Annotated[
         bool,
         typer.Option(
@@ -65,9 +69,13 @@ def hardening(
     console = ctx.console
 
     try:
+        if environment not in ["staging", "production", "vagrant"]:
+            console.print(f"[red]Error:[/red] {environment} is not a valid option")
+            raise typer.Exit(code=2)
+
         exit_code: int = run_hardening(
             ctx,
-            inventory=inventory,
+            environment=environment,
             ssh_key=ssh_key,
             ssh_user=ssh_user,
             check=check,
@@ -84,8 +92,8 @@ def hardening(
 
 def run_hardening(
     ctx: Context,
+    environment: str,
     *,
-    inventory: Path,
     ssh_key: str,
     ssh_user: str,
     check: bool,
@@ -99,8 +107,8 @@ def run_hardening(
     ----------
     ctx: Context
         Context of the application
-    inventory: Path
-        The selected inventory
+    environment: str
+        The environment to use
     ssh_key: str
         If an access key must be used
     ssh_user: str
@@ -123,8 +131,13 @@ def run_hardening(
         ctx.console.print(f"[red]Playbook not found:[/red] {ctx.audit_playbook}")
         return 2
 
-    inventory_value: str = str(inventory)
-    result: AuditResult = AuditResult.create(inventory_value)
+    available_envs: dict = {
+        "vagrant": "/vagrant",
+        "production": "/production",
+        "staging": "/staging",
+    }
+
+    custom_inventory = str(ctx.inventory_dir) + available_envs[environment]
 
     ctx.console.print()
     table = Table.grid(padding=(0, 2))
@@ -132,7 +145,7 @@ def run_hardening(
     table.add_column(style="spring_green1")
 
     table.add_row("Repository", str(ctx.root))
-    table.add_row("Inventory", str(inventory_value))
+    table.add_row("Inventory", custom_inventory)
     table.add_row("Check enabled", str(check))
     table.add_row("Diff enabled", str(diff))
     table.add_row("JSON output", str(json))
@@ -140,7 +153,7 @@ def run_hardening(
     ctx.console.print(
         Panel(
             table,
-            title="[bold cyan]Starting security audit[/bold cyan]",
+            title="[bold cyan]Starting hardening[/bold cyan]",
             width=100,
             border_style="cyan",
         )
@@ -148,39 +161,15 @@ def run_hardening(
 
     runner: AnsibleWrapper = AnsibleWrapper(ctx)
 
-    ctx.console.print("[bold]Running audit...[/bold]\n")
+    ctx.console.print("[bold]Running hardening...[/bold]\n")
 
-    ansible_result: AnsibleResult = runner.run(
-        ctx.audit_playbook,
-        inventory=inventory_value,
+    ansible_result: int = runner.run(
+        ctx.hardening_playbook,
+        inventory=custom_inventory,
         ssh_key=ssh_key,
         ssh_user=ssh_user,
         check=check,
         diff=diff,
     )
 
-    ctx.console.print(ansible_result.stdout)
-
-    if ansible_result.stderr:
-        ctx.console.print(f"[yellow]{ansible_result.stderr}[/yellow]")
-
-    result.success = ansible_result.success
-
-    if ansible_result.success:
-        result.finished_at = result.started_at
-        _render_success(ctx, result)
-    else:
-        ctx.console.print(
-            Panel(
-                f"Ansible exited with code {ansible_result.returncode}",
-                title="Audit failed",
-                border_style="red",
-            )
-        )
-
-        result.finished_at = result.started_at
-
-    if json:
-        _write_result(ctx, result, "json")
-
-    return 0 if ansible_result.success else ansible_result.returncode
+    return ansible_result

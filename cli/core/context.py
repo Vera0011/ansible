@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import sys, os
+
 from dataclasses import dataclass
 from pathlib import Path
 from rich.console import Console
@@ -35,7 +37,6 @@ class Context:
     reports_dir: Path
 
     ansible_conf_path: Path
-    inventory_path: Path
     console: Console
 
     @classmethod
@@ -52,13 +53,13 @@ class Context:
         current = Path.cwd().resolve()
 
         for candidate in (current, *current.parents):
-            if cls._get_paths(candidate).index(0):
+            if cls._get_paths(candidate)[0]:
                 return cls.from_root(candidate)
 
         if getattr(sys, "frozen", False):
             bundled_root = Path(getattr(sys, "_MEIPASS", ""))
 
-            if cls._get_paths(bundled_root).index(0):
+            if cls._get_paths(bundled_root)[0]:
                 return cls.from_root(
                     bundled_root,
                     reports_dir=Path.cwd() / "reports",
@@ -89,15 +90,17 @@ class Context:
         """
 
         cls._configure_ansible_environment()
+        paths = cls._get_paths(root)
+
+        playbooks_dir, roles_dir, inventory_dir, ansible_conf_path = paths[1]
 
         return cls(
             root=root,
             console=Console(),
-            playbooks_dir=cls.playbooks_dir,
-            roles_dir=cls.roles_dir,
-            inventory_dir=cls.inventory_dir,
-            inventory_path=cls.inventory_path,
-            ansible_conf=cls.ansible_conf_path,
+            playbooks_dir=playbooks_dir,
+            roles_dir=roles_dir,
+            inventory_dir=inventory_dir,
+            ansible_conf_path=ansible_conf_path,
             reports_dir=reports_dir if reports_dir != None else cls.inventory_dir,
         )
 

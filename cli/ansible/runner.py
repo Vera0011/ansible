@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from cli.core.context import Context
 from ansible.cli.playbook import PlaybookCLI
-from cli.core.models.audit.AnsibleResult import AnsibleResult
 
 
 class AnsibleWrapper:
@@ -23,7 +22,8 @@ class AnsibleWrapper:
         ssh_user: str,
         check: bool,
         diff: bool,
-    ) -> AnsibleResult:
+        insecure: bool
+    ) -> int:
         """
         Executes a playbook given the specified parameters
 
@@ -41,6 +41,8 @@ class AnsibleWrapper:
             If the parameter 'check' should be enabled or not
         diff: bool
             If the parameter 'diff' should be enabled or not
+        insecure: bool
+            If the connection is insecure or not. It activates the Host key checking
 
         Returns
         -------
@@ -56,6 +58,17 @@ class AnsibleWrapper:
             "-e",
             "ansible_python_interpreter=auto_silent",
         ]
+
+        if insecure:
+            self.context.console.print(
+                "[yellow]Warning:[/yellow] SSH host key verification is disabled for this run."
+            )
+            command.extend(
+                [
+                    "--ssh-common-args",
+                    "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+                ]
+            )
 
         if check:
             command.append("--check")
@@ -83,8 +96,4 @@ class AnsibleWrapper:
         cli.parse()
         completed = cli.run()
 
-        return AnsibleResult(
-            returncode=completed or 0,
-            stdout="",
-            stderr="",
-        )
+        return completed or 0

@@ -1,21 +1,25 @@
 from __future__ import annotations
 import typer
 
-from pathlib import Path
 from typing import Annotated
 from rich.panel import Panel
 from rich.table import Table
 
 from cli.ansible.runner import AnsibleWrapper
 from cli.core.context import Context
-from cli.core.models.audit.AnsibleResult import AnsibleResult
-from cli.core.models.audit.AuditResult import AuditResult
-from cli.output.io import _render_success, _write_result
 from cli.core.exceptions import EasySecError
 
 
 def audit(
     ctx: typer.Context,
+    environment: Annotated[
+        str,
+        typer.Option(
+            "--environment",
+            "-e",
+            help="Determines if the inventory to use. Available options are 'vagrant', 'production' and 'staging'",
+        ),
+    ] = "vagrant",
     ssh_key: Annotated[
         str,
         typer.Option(
@@ -39,7 +43,7 @@ def audit(
             "-c",
             help="Run Ansible in check mode. This means that the playbook will be executed but will not perform changes",
         ),
-    ] = False,
+    ] = True,
     diff: Annotated[
         bool,
         typer.Option(
@@ -65,8 +69,13 @@ def audit(
     console = ctx.console
 
     try:
+        if environment not in ["staging", "production", "vagrant"]:
+            console.print(f"[red]Error:[/red] {environment} is not a valid option")
+            raise typer.Exit(code=2)
+
         exit_code: int = run_audit(
             ctx,
+            environment=environment,
             ssh_key=ssh_key,
             ssh_user=ssh_user,
             check=check,
@@ -83,6 +92,7 @@ def audit(
 
 def run_audit(
     ctx: Context,
+    environment: bool,
     *,
     ssh_key: str,
     ssh_user: str,
@@ -97,6 +107,8 @@ def run_audit(
     ----------
     ctx: Context
         Context of the application
+    environment: str
+        The environment to use
     ssh_key: str
         If an access key must be used
     ssh_user: str
@@ -119,7 +131,13 @@ def run_audit(
         ctx.console.print(f"[red]Playbook not found:[/red] {ctx.audit_playbook}")
         return 2
 
-    result: AuditResult = AuditResult.create()
+    available_envs: dict = {
+        "vagrant": "/vagrant",
+        "production": "/production",
+        "staging": "/staging",
+    }
+
+    custom_inventory = str(ctx.inventory_dir) + available_envs[environment]
 
     ctx.console.print()
     table = Table.grid(padding=(0, 2))
@@ -128,7 +146,7 @@ def run_audit(
 
     table.add_row("Repository", str(ctx.root))
     table.add_row("Option", "Audit")
-    table.add_row("Inventory", str(ctx.inventory_path))
+    table.add_row("Inventory", available_envs[environment])
     table.add_row("Check enabled", str(check))
     table.add_row("Diff enabled", str(diff))
     table.add_row("JSON output", str(json))
@@ -146,37 +164,17 @@ def run_audit(
 
     ctx.console.print("[bold]Running audit...[/bold]\n")
 
-    ansible_result: AnsibleResult = runner.run(
+    # Does not check if the key is correct when Vagrant environment is selected
+    insecure: bool = True if environment in ["vagrant"] else False
+
+    ansible_result: int = runner.run(
         ctx.audit_playbook,
-        inventory=inventory_value,
         ssh_key=ssh_key,
+        inventory=custom_inventory,
         ssh_user=ssh_user,
         check=check,
         diff=diff,
+        insecure=insecure,
     )
 
-    ctx.console.print(ansible_result.stdout)
-
-    if ansible_result.stderr:
-        ctx.console.print(f"[yellow]{ansible_result.stderr}[/yellow]")
-
-    result.success = ansible_result.success
-
-    if ansible_result.success:
-        result.finished_at = result.started_at
-        _render_success(ctx, result)
-    else:
-        ctx.console.print(
-            Panel(
-                f"Ansible exited with code {ansible_result.returncode}",
-                title="Audit failed",
-                border_style="red",
-            )
-        )
-
-        result.finished_at = result.started_at
-
-    if json:
-        _write_result(ctx, result, "json")
-
-    return 0 if ansible_result.success else ansible_result.returncode
+    return ansible_result
