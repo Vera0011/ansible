@@ -10,7 +10,7 @@ permalink: /en/v1.1.0/auditory
 
 ## Introduction
 
-This role runs a set of security auditing tools on the target host, collects their reports, and sends the results back to the controller.
+This role runs a set of security auditing tools on the target host, collects their reports, and sends the results back to the controller. This role belongs to the `Blue Team` section.
 
 The following tools are executed, in order, and for the purpose described:
 
