@@ -1,8 +1,7 @@
 ---
 layout: default
 title: Workflows
-parent: English
-has_children: true
+parent: v1.1.0
 search_exclude: true
 ---
 
