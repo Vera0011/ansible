@@ -9,8 +9,8 @@ nav_order: 1
 
 Select a language:
 
-- [English](/en/)
-- [Español](/es/)
+- [English](/en/introduction)
+- [Español](/es/introduction)
 
 ## Disclaimer and contributions
 This project is completely open source, created by Vera and licensed under the [MIT License](https://github.com/Vera0011/easysec/tree/master/LICENSE.md). Any contributions, suggestions, or implementations are welcome.

@@ -11,8 +11,21 @@ include:
   - ../LICENSE.md
   - assets
 
-#exclude:
-#  - es/
+collections:
+  en:
+    permalink: "/:collection/:path/"
+    output: true
+  es:
+    permalink: "/:collection/:path/"
+    output: true
+
+just_the_docs:
+  collections:
+    en:
+      name: English
+    es:
+      name: Español
+      nav_fold: true
 
 aux_links:
   "<img alt='Github logo' src='https://asset.brandfetch.io/idZAyF9rlg/idVXsZfhLv.svg' width='30em' height='30em'></img>":
