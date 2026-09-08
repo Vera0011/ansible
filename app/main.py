@@ -1,25 +1,12 @@
 from __future__ import annotations
-import typer
+import os
+from nicegui import ui
 
-#from app.bin.audit import audit
+# Set QT to be used by pywebview (instead of the default GTK)
+os.environ["PYWEBVIEW_GUI"] = "qt"
+
 from app.gui.app import EasySecApp
-#from app.bin.version import show_version
-#from app.core.context import Context
 
-
-#@app.callback()
-#def main(ctx: typer.Context) -> None:
-#    """
-#    This function sets up the context and starts the app
-#    """
-#
-#    context = Context.discover()
-#    ctx.obj = context
-
-
-#app.command(name="version")(show_version)
-#app.command(name="audit")(audit)
-#app.command(name="harden")(hardening)
-
-if __name__ == "__main__":
-    EasySecApp().mainloop()
+if __name__ in {"__main__", "__mp_main__"}:
+    EasySecApp()
+    ui.run(title="EasySec Desktop", native=True, window_size=(700, 600), reload=True)

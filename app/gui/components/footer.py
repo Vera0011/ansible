@@ -1,14 +1,21 @@
+import sys
+from nicegui import ui
+
 from app import __version__
 
-import tkinter as tk
-from tkinter import ttk
 
+class Footer(ui.footer):
+    """
+    This class represents the general footer
+    """
 
-def _generate_footer(container):
-    footer = ttk.Label(
-        container,
-        text=__version__,
-        font=("Helvetica", 8),
-        foreground="gray",
-    )
-    footer.pack(side=tk.BOTTOM, pady=(10, 0))
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.classes(
+            "bg-slate-800 text-gray-300 text-xs py-2 px-4 flex justify-between items-center"
+        )
+
+        with self:
+            ui.label(f"EasySec - {__version__}")
+            ui.label(f"Python {sys.version_info.major}.{sys.version_info.minor}")
