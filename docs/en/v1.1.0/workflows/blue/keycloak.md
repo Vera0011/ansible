@@ -24,7 +24,7 @@ This workflow runs in two stages:
 1. **Database setup** — installs and configures PostgreSQL on the host, with a self-signed SSL certificate. Two users are created (`easysec`, a superuser; and `keycloak`, a standard user), along with a `keycloak` database owned by the `keycloak` user. Access rules (`pg_hba.conf`) are set to only allow the `keycloak` user to connect to the `keycloak` database over SSL, from `localhost` (IPv4 and IPv6); all other connections are rejected.
 2. **Keycloak setup** — installs and configures Keycloak, with its own self-signed SSL certificate. Before installation, the workflow automatically retrieves the auto-generated `keycloak` database password from the credentials file produced during the PostgreSQL step, so no manual password entry is required.
 
-Generated credentials — including the auto-generated PostgreSQL passwords — can be found in [`generated/postgresql_users.txt`](../../../../generated/postgresql_users.txt).
+Generated credentials — including the auto-generated PostgreSQL passwords — can be found in `generated/postgresql_users.txt`.
 
 ## Ansible workflow usage
 
