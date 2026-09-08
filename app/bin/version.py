@@ -1,5 +1,5 @@
 import typer
-from cli import __version__
+from app.cli import __version__
 
 
 def show_version(ctx: typer.Context) -> None:

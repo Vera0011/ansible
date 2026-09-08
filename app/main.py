@@ -1,10 +1,10 @@
 from __future__ import annotations
 import typer
 
-from cli.bin.audit import audit
-from cli.bin.hardening import hardening
-from cli.bin.version import show_version
-from cli.core.context import Context
+from app.cli.bin.audit import audit
+from app.cli.bin.hardening import hardening
+from app.cli.bin.version import show_version
+from app.cli.core.context import Context
 
 app = typer.Typer(
     name="easysec",

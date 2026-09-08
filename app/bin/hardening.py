@@ -5,12 +5,12 @@ from typing import Annotated
 from rich.panel import Panel
 from rich.table import Table
 
-from cli.ansible.runner import AnsibleWrapper
-from cli.core.context import Context
-from cli.core.exceptions import EasySecError
+from app.cli.ansible.runner import AnsibleWrapper
+from app.cli.core.context import Context
+from app.cli.core.exceptions import EasySecError
 
 
-def audit(
+def hardening(
     ctx: typer.Context,
     environment: Annotated[
         str,
@@ -73,7 +73,7 @@ def audit(
             console.print(f"[red]Error:[/red] {environment} is not a valid option")
             raise typer.Exit(code=2)
 
-        exit_code: int = run_audit(
+        exit_code: int = run_hardening(
             ctx,
             environment=environment,
             ssh_key=ssh_key,
@@ -90,9 +90,9 @@ def audit(
     raise typer.Exit(code=exit_code)
 
 
-def run_audit(
+def run_hardening(
     ctx: Context,
-    environment: bool,
+    environment: str,
     *,
     ssh_key: str,
     ssh_user: str,
@@ -145,8 +145,7 @@ def run_audit(
     table.add_column(style="spring_green1")
 
     table.add_row("Repository", str(ctx.root))
-    table.add_row("Option", "Audit")
-    table.add_row("Inventory", available_envs[environment])
+    table.add_row("Inventory", custom_inventory)
     table.add_row("Check enabled", str(check))
     table.add_row("Diff enabled", str(diff))
     table.add_row("JSON output", str(json))
@@ -154,7 +153,7 @@ def run_audit(
     ctx.console.print(
         Panel(
             table,
-            title="[bold cyan]Starting security audit[/bold cyan]",
+            title="[bold cyan]Starting hardening[/bold cyan]",
             width=100,
             border_style="cyan",
         )
@@ -162,19 +161,15 @@ def run_audit(
 
     runner: AnsibleWrapper = AnsibleWrapper(ctx)
 
-    ctx.console.print("[bold]Running audit...[/bold]\n")
-
-    # Does not check if the key is correct when Vagrant environment is selected
-    insecure: bool = True if environment in ["vagrant"] else False
+    ctx.console.print("[bold]Running hardening...[/bold]\n")
 
     ansible_result: int = runner.run(
-        ctx.audit_playbook,
-        ssh_key=ssh_key,
+        ctx.hardening_playbook,
         inventory=custom_inventory,
+        ssh_key=ssh_key,
         ssh_user=ssh_user,
         check=check,
         diff=diff,
-        insecure=insecure,
     )
 
     return ansible_result
