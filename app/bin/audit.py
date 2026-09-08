@@ -5,10 +5,9 @@ from typing import Annotated
 from rich.panel import Panel
 from rich.table import Table
 
-from app.cli.ansible.runner import AnsibleWrapper
-from app.cli.core.context import Context
-from app.cli.core.exceptions import EasySecError
-
+from app.core.runner import AnsibleWrapper
+from app.core.context import Context
+from app.core.exceptions import EasySecError
 
 def audit(
     ctx: typer.Context,

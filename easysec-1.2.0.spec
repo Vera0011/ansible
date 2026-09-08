@@ -1,25 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_data_files
-from PyInstaller.utils.hooks import collect_submodules
-from PyInstaller.utils.hooks import collect_all
-
-datas = [('playbooks', 'playbooks'), ('roles', 'playbooks/roles'), ('inventory', 'inventory'), ('ansible.cfg', '.')]
-binaries = [('.venv/bin/ansible-playbook', 'ansible/bin')]
-hiddenimports = []
-datas += collect_data_files('ansible_collections')
-hiddenimports += collect_submodules('ansible_collections')
-hiddenimports += collect_submodules('ansible.plugins')
-hiddenimports += collect_submodules('ansible.modules')
-tmp_ret = collect_all('ansible')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['cli/main.py'],
+    ['app/main.py'],
     pathex=[],
-    binaries=binaries,
-    datas=datas,
-    hiddenimports=hiddenimports,
+    binaries=[],
+    datas=[],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -42,7 +29,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

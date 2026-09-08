@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from rich.console import Console
 
-from app.cli.core.exceptions import RepositoryError
+from app.core.exceptions import RepositoryError
 
 
 @dataclass(frozen=True)

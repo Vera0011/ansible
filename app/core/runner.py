@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from app.cli.core.context import Context
+from app.core.context import Context
 from ansible.cli.playbook import PlaybookCLI
 
 
